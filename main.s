@@ -268,6 +268,15 @@ Debug_Capture
 	ADD R1, R2 ; Add the time buffer beginning address with the total offset
 	CMP R0, R1 ; Compare the address of the time pointer with the address at the end of the buffer
 	BGT done ; If R0 is greater than R1 than we want to return immediately
+	
+	; Step 3
+	LDR R1, =GPIO_PORTE_DATA_R ; Load the address of the Port E data into R1 so we can use it
+	LDR R0, [R1] ; Load the value at R1 (the port data) into R0
+	
+	LDR R3, =NVIC_ST_CURRENT_R ; Load the address of the SysTick timer data into R3 so we can use it
+	LDR R2, [R3] ; Load the value at R3 (the systick data) into R2
+	
+	; Step 4
 
 	; Step 10
 done	POP {R0-R12, PC} ; Pop everything back
