@@ -239,7 +239,7 @@ initLoop2
 ; Note: push/pop an even number of registers so C compiler is happy
 ; Debug capture steps are as follows
 ; 1. Save any registers needed
-; 2. Return immediately if the buffers are full (pointer > start + 50 * SIZE)
+; 2. Return immediately if the buffers are full (pointer > start + 4 * SIZE)
 ; 3. Read Port E and the SysTick timer (NVIC_ST_CURRENT_R)
 ; 4. Mask capturing just bits 1,0 of Port E data
 ; 5. Shift the Port E data bit 1 into bit 4, leave bit 0 in bit 0
@@ -252,10 +252,25 @@ Debug_Capture
 	; Step 1
 	PUSH {R0-R12, LR} ; push em all for now, we can reduce this later if needed
 
+	; Step 2
+	LDR R0, =DataPt ; Load the address of the data pointer into R0
+	LDR R1, =DataBuffer ; Load the address of the beginning of the data buffer into R1
+	MOV R2, =SIZE ; Move the Size value into R2
+	MUL R2, #4 ; Multiply R2 by 4 to get the total offset for where the last pointer is
+	ADD R1, R2 ; Add the data buffer beginning address with the total offset
+	CMP R0, R1 ; Compare the address of the data pointer with the address at the end of the buffer
+	BGT done ; If R0 is greater than R1 than we want to return immediately
 	
+	LDR R0, =TimePt ; Load the address of the time pointer into R0
+	LDR R1, =TimeBuffer ; Load the address of the beginning of the time buffer into R1
+	MOV R2, =SIZE ; Move the Size value into R2
+	MUL R2, #4 ; Multiply R2 by 4 to get the total offset for where the last pointer is
+	ADD R1, R2 ; Add the time buffer beginning address with the total offset
+	CMP R0, R1 ; Compare the address of the time pointer with the address at the end of the buffer
+	BGT done ; If R0 is greater than R1 than we want to return immediately
 
 	; Step 10
-	POP {R0-R12, PC} ; Pop everything back
+done	POP {R0-R12, PC} ; Pop everything back
     BX LR
 	  
 
