@@ -249,10 +249,10 @@ initLoop2
 ; 9. Increment TimePt to next address
 ; 10. Restore any registers saved and return
 Debug_Capture
-	; Step 1
+	; Step 1 - Save registers
 	PUSH {R0-R12, LR} ; push em all for now, we can reduce this later if needed
 
-	; Step 2
+	; Step 2 - return if buffers full
 	LDR R0, =DataPt ; Load the address of the data pointer into R0
 	LDR R1, =DataBuffer ; Load the address of the beginning of the data buffer into R1
 	LDR R3, =SIZE ; Move the Size value into R2
@@ -273,14 +273,19 @@ Debug_Capture
 	CMP R0, R1 ; Compare the address of the time pointer with the address at the end of the buffer
 	BGT done ; If R0 is greater than R1 than we want to return immediately
 	
-	; Step 3
+	; Step 3 - read port e and systick (into r0 and r2 respectively)
 	LDR R1, =GPIO_PORTE_DATA_R ; Load the address of the Port E data into R1 so we can use it
 	LDR R0, [R1] ; Load the value at R1 (the port data) into R0
 	
 	LDR R3, =NVIC_ST_CURRENT_R ; Load the address of the SysTick timer data into R3 so we can use it
 	LDR R2, [R3] ; Load the value at R3 (the systick data) into R2
 	
-	; Step 4
+	; Step 4 - mask to only get bits 1,0 from port e
+	MOV R4, #0x0011
+	MOVT R4, #0x0000
+	AND R0, R4 ; We want R0 to only worry about bits 1,0
+	
+	; Step 5 - shift data bit 1 into bit 4 in port e
 	LSL R4, R0, #3 ; In R4 put R0 shifted left by 3 bits (we need bit 1 to move to bit 4)
 	MOV R5, #0xF000
 	MOVT R5, #0x0000
@@ -290,7 +295,22 @@ Debug_Capture
 	BIC R0, R5 ; clear everything but bit 0 in R5
 	AND R0, R4 ; AND R0 and R4 together to get the values in the correct places
 	
-	; Step 10
+	; Step 6 - dump into databuffer using datapt
+	LDR R1, =DataPt
+	STR R0, [R1] ; Store R0 into the current address of the data pointer
+	
+	; Step 7 - increment datapt
+	LDR R1, =DataPt
+	ADD R1, #4
+	; TODO update the actual pointer??? or does this auto re-store in DataPt
+	
+	; Step 8 - dump time into timebuffer
+	LDR R1, =TimePt
+	STR R0, [R1]
+	
+	; Step 9 - increment timept
+	
+	; Step 10 - restore and return
 done	POP {R0-R12, PC} ; Pop everything back
     BX LR
 	  
