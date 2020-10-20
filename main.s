@@ -296,19 +296,22 @@ Debug_Capture
 	AND R0, R4 ; AND R0 and R4 together to get the values in the correct places
 	
 	; Step 6 - dump into databuffer using datapt
-	LDR R1, =DataPt
-	STR R0, [R1] ; Store R0 into the current address of the data pointer
+	LDR R1, =DataPt ; Loads the address of the memory for our pointer into R1
+	LDR R3, [R1] ; Loads the value DataPt points to into R3
+	STR R0, [R3] ; Stores R0 (the port e data) into the current address of the data pointer
 	
 	; Step 7 - increment datapt
-	LDR R1, =DataPt
-	ADD R1, #4
-	; TODO update the actual pointer??? or does this auto re-store in DataPt
+	ADD R3, #4 ; Increments pointer by 4
+	STR R3, [R1] ; Stores the pointer back into the DataPt
 	
 	; Step 8 - dump time into timebuffer
-	LDR R1, =TimePt
-	STR R0, [R1]
+	LDR R1, =TimePt ; Loads the address of the memory for our pointer into R1
+	LDR R3, [R1] ; Loads the value TimePt points to into R3
+	STR R2, [R3] ; Stores R2 (the systick data) into R3
 	
 	; Step 9 - increment timept
+	ADD R3, #4 ; Increments pointer by 4
+	STR R3, [R1] ; Stores the pointer back into the TimePt
 	
 	; Step 10 - restore and return
 done	POP {R0-R12, PC} ; Pop everything back
