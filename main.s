@@ -115,13 +115,14 @@ InitPortE
 	
 InitPortF
 
-	B Debug_Init
+	BL Debug_Init
 	
-main
-	; Nothing needs to be initialized here
-	; because it will run through all of InitPortE first
 
-loop  
+      CPSIE  I    ; TExaS voltmeter, scope runs on interrupts
+loop  BL   Debug_Capture
+    ;heartbeat
+    ; Delay
+    ;input PE1 test output PE0
 	BL delay62MS ; We want to delay at the beginning now
 	;Read the switch and test if the switch is pressed
 	LDR R1, =GPIO_PORTE_DATA_R ; Load the address of Port E data into R1 so we can use it
@@ -179,12 +180,6 @@ delay
 	SUBS R7, R7, #0x01 ; Subtract the current value of R12 by 1 and put it into R12
 	BNE delay ; Compare R12 to 0 and if it is not 0, go back to delay
 	BX LR ; Go back to the line after the delay62MS was called
-
-      CPSIE  I    ; TExaS voltmeter, scope runs on interrupts
-debugloop  BL   Debug_Capture
-      ;heartbeat
-      ; Delay
-      ;input PE1 test output PE0
 	  B    loop
 
 ;------------Debug_Init------------
@@ -219,14 +214,16 @@ initLoop2
 	BLO initLoop2 ; if it hasn't reached it yet, keep going
 	
 	; Step 2 part 1
+	LDR R2, =DataBuffer
+	LDR R3, =DataPt
+	STR R2, [R3] ;Point DataPt to DataBuffer
+	
+	; Step 2 part 2
     LDR R0, =TimeBuffer
     LDR R1, =TimePt
     STR R0, [R1] ;Point TimePt to TimeBuffer
 	
-	; Step 2 part 2
-	LDR R2, =DataBuffer
-	LDR R3, =DataPt
-	STR R2, [R3] ;Point DataPt to DataBuffer
+
 	
 	; Activate the SysTick timer
 	BL SysTick_Init
@@ -253,10 +250,11 @@ Debug_Capture
 	PUSH {R0-R12, LR} ; push em all for now, we can reduce this later if needed
 
 	; Step 2 - return if buffers full
-	LDR R0, =DataPt ; Load the address of the data pointer into R0
+	LDR R1, =DataPt ; Load the address of the data pointer into R0
+	LDR R0, [R1]
 	LDR R1, =DataBuffer ; Load the address of the beginning of the data buffer into R1
-	LDR R3, =SIZE ; Move the Size value into R2
-	LDR R2, [R3]
+	;LDR R1, [R2]
+	LDR R2, =SIZE ; Move the Size value into R2
 	MOV R3, #4 ; set r3 to 4 for multiplying
 	MUL R2, R3 ; Multiply R2 by 4 to get the total offset for where the last pointer is
 	ADD R1, R2 ; Add the data buffer beginning address with the total offset
