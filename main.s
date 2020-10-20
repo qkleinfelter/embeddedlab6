@@ -192,14 +192,35 @@ debugloop  BL   Debug_Capture
 ; Initializes the debugging instrument
 ; Note: push/pop an even number of registers so C compiler is happy
 Debug_Init
-    
+    LDR R0, =TimeBuffer
+    LDR R1, =TimePt
+    STR R0, [R1] ;Point TimePt to TimeBuffer
+	
+	LDR R2, =DataBuffer
+	LDR R3, =DataPt
+	STR R2, [R3] ;Point DataPt to DataBuffer
+	
 initFirstBuf
 	LDR R0, =DataBuffer
-	MOV R1, #0xFFFF
-	MOVT R1, #0xFFFF
-	STRB R1, [R0], #1
-	B initFirstBuf
+	MOV R1, #0 ; ofs = 0
+	MOV R2, #0xFFFFFFFF
+initLoop
+	STR R2, [R0, R1] ; put r2 into r0+r1
+	ADD R1, #4 ; ofs += 4
+	CMP R1, #200
+	BLO initLoop
+
+initSecondBuf
+	LDR R0, =TimeBuffer
+	MOV R1, #0
+	MOV R2, #0xFFFFFFFF
+initLoop2
+	STR R2, [R0, R1] ; put r2 into r0+r1
+	ADD R1, #4 ; ofs += 4
+	CMP R1, #200
+	BLO initLoop2
 	
+	nop
 	; init SysTick
 	BL SysTick_Init
 
