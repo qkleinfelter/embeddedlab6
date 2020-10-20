@@ -58,7 +58,6 @@ DataBuffer SPACE  SIZE*4
 TimeBuffer SPACE  SIZE*4
 DataPt     SPACE  4
 TimePt     SPACE  4
-Count	   SPACE  4
 ;These names MUST be exported
            EXPORT DataBuffer  
            EXPORT TimeBuffer  
@@ -238,8 +237,25 @@ initLoop2
 ;------------Debug_Capture------------
 ; Dump Port E and time into buffers
 ; Note: push/pop an even number of registers so C compiler is happy
+; Debug capture steps are as follows
+; 1. Save any registers needed
+; 2. Return immediately if the buffers are full (pointer > start + 50 * SIZE)
+; 3. Read Port E and the SysTick timer (NVIC_ST_CURRENT_R)
+; 4. Mask capturing just bits 1,0 of Port E data
+; 5. Shift the Port E data bit 1 into bit 4, leave bit 0 in bit 0
+; 6. Dump this information into DataBuffer using the pointer DataPt
+; 7. Increment DataPt to next address.
+; 8. Dump time into TimeBuffer using the pointer TimePt
+; 9. Increment TimePt to next address
+; 10. Restore any registers saved and return
 Debug_Capture
+	; Step 1
+	PUSH {R0-R12, LR} ; push em all for now, we can reduce this later if needed
 
+	
+
+	; Step 10
+	POP {R0-R12, PC} ; Pop everything back
     BX LR
 	  
 
