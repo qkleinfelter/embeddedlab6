@@ -253,7 +253,6 @@ Debug_Capture
 	LDR R1, =DataPt ; Load the address of the data pointer into R0
 	LDR R0, [R1]
 	LDR R1, =DataBuffer ; Load the address of the beginning of the data buffer into R1
-	;LDR R1, [R2]
 	LDR R2, =SIZE ; Move the Size value into R2
 	MOV R3, #4 ; set r3 to 4 for multiplying
 	MUL R2, R3 ; Multiply R2 by 4 to get the total offset for where the last pointer is
@@ -261,10 +260,10 @@ Debug_Capture
 	CMP R0, R1 ; Compare the address of the data pointer with the address at the end of the buffer
 	BGT done ; If R0 is greater than R1 than we want to return immediately
 	
-	LDR R0, =TimePt ; Load the address of the time pointer into R0
+	LDR R1, =TimePt ; Load the address of the time pointer into R0
+	LDR R0, [R1]
 	LDR R1, =TimeBuffer ; Load the address of the beginning of the time buffer into R1
-	LDR R3, =SIZE ; Move the Size value into R2
-	LDR R2, [R3]
+	LDR R2, =SIZE ; Move the Size value into R2
 	MOV R3, #4 ; set r3 to 4 for multiplying
 	MUL R2, R3 ; Multiply R2 by 4 to get the total offset for where the last pointer is
 	ADD R1, R2 ; Add the time buffer beginning address with the total offset
@@ -285,13 +284,13 @@ Debug_Capture
 	
 	; Step 5 - shift data bit 1 into bit 4 in port e
 	LSL R4, R0, #3 ; In R4 put R0 shifted left by 3 bits (we need bit 1 to move to bit 4)
-	MOV R5, #0xF000
-	MOVT R5, #0x0000
+	MOV R5, #0x0FFF
+	MOVT R5, #0xFFFF
 	BIC R4, R5 ; clear everything but bit 4 in R4
-	MOV R5, #0x000F
-	MOVT R5, #0x0000
+	MOV R5, #0xFFF0
+	MOVT R5, #0xFFFF
 	BIC R0, R5 ; clear everything but bit 0 in R5
-	AND R0, R4 ; AND R0 and R4 together to get the values in the correct places
+	ORR R0, R4 ; OR R0 and R4 together to get the values in the correct places
 	
 	; Step 6 - dump into databuffer using datapt
 	LDR R1, =DataPt ; Loads the address of the memory for our pointer into R1
