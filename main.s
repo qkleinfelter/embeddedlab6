@@ -113,6 +113,29 @@ InitPortE
 	LDR R1, =GPIO_PORTE_DATA_R
 	STR R0, [R1]
 	
+InitPortF
+	
+; copied from SysTick_4C123asm
+SysTick_Init
+    ; disable SysTick during setup
+    LDR R1, =NVIC_ST_CTRL_R         ; R1 = &NVIC_ST_CTRL_R
+    MOV R0, #0                      ; R0 = 0
+    STR R0, [R1]                    ; [R1] = R0 = 0
+    ; maximum reload value
+    LDR R1, =NVIC_ST_RELOAD_R       ; R1 = &NVIC_ST_RELOAD_R
+    LDR R0, =NVIC_ST_RELOAD_M;      ; R0 = NVIC_ST_RELOAD_M
+    STR R0, [R1]                    ; [R1] = R0 = NVIC_ST_RELOAD_M
+    ; any write to current clears it
+    LDR R1, =NVIC_ST_CURRENT_R      ; R1 = &NVIC_ST_CURRENT_R
+    MOV R0, #0                      ; R0 = 0
+    STR R0, [R1]                    ; [R1] = R0 = 0
+    ; enable SysTick with core clock
+    LDR R1, =NVIC_ST_CTRL_R         ; R1 = &NVIC_ST_CTRL_R
+                                    ; R0 = ENABLE and CLK_SRC bits set
+    MOV R0, #(NVIC_ST_CTRL_ENABLE+NVIC_ST_CTRL_CLK_SRC)
+    STR R0, [R1]                    ; [R1] = R0 = (NVIC_ST_CTRL_ENABLE|NVIC_ST_CTRL_CLK_SRC)
+    BX  LR                          ; return
+	
 main
 	; Nothing needs to be initialized here
 	; because it will run through all of InitPortE first
@@ -177,7 +200,7 @@ delay
 	BX LR ; Go back to the line after the delay62MS was called
 
       CPSIE  I    ; TExaS voltmeter, scope runs on interrupts
-loop  BL   Debug_Capture
+debugloop  BL   Debug_Capture
       ;heartbeat
       ; Delay
       ;input PE1 test output PE0
