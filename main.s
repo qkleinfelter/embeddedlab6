@@ -198,25 +198,25 @@ Debug_Init
 	PUSH {R0-R4, LR} ; we only use r0-r3, but we push r4 because we also need to push LR and we should push an even number of registers
 ; Step 1 part 1
 initFirstBuf
-	LDR R0, =DataBuffer
-	MOV R1, #0 ; ofs = 0
-	MOV R2, #0xFFFFFFFF
+	LDR R0, =DataBuffer ; Load the address of the buffer into R0
+	MOV R1, #0 ; offset = 0
+	MOV R2, #0xFFFFFFFF ; the value we want to init to
 initLoop
-	STR R2, [R0, R1] ; put r2 into r0+r1
-	ADD R1, #4 ; ofs += 4
-	CMP R1, #200
-	BLO initLoop
+	STR R2, [R0, R1] ; put r2 into the address stored by R0 + R1
+	ADD R1, #4 ; add 4 to offset to get to the next address
+	CMP R1, #200 ; check if our offset has reached 200 (4 * SIZE)
+	BLO initLoop ; if it hasn't reached it yet, keep going
 
 ; Step 1 part 2
 initSecondBuf
-	LDR R0, =TimeBuffer
-	MOV R1, #0
-	MOV R2, #0xFFFFFFFF
+	LDR R0, =TimeBuffer ; Load the address of the buffer into R0
+	MOV R1, #0 ; offset = 0
+	MOV R2, #0xFFFFFFFF ; the value we want to init to
 initLoop2
-	STR R2, [R0, R1] ; put r2 into r0+r1
-	ADD R1, #4 ; ofs += 4
-	CMP R1, #200
-	BLO initLoop2
+	STR R2, [R0, R1] ; put r2 into the address stored by R0 + R1
+	ADD R1, #4 ; add 4 to offset to get to the next address
+	CMP R1, #200 ; check if our offset has reached 200 (4 * SIZE)
+	BLO initLoop2 ; if it hasn't reached it yet, keep going
 	
 	; Step 2 part 1
     LDR R0, =TimeBuffer
