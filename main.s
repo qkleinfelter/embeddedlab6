@@ -191,15 +191,13 @@ debugloop  BL   Debug_Capture
 ;------------Debug_Init------------
 ; Initializes the debugging instrument
 ; Note: push/pop an even number of registers so C compiler is happy
+; Debug init basic stpes are as follows
+; 1. Init both buffers to be entirely 0xFFFFFFFF
+; 2. Init the pointers to the beginning of each buffer
+; 3. Activate the SysTick timer
 Debug_Init
-    LDR R0, =TimeBuffer
-    LDR R1, =TimePt
-    STR R0, [R1] ;Point TimePt to TimeBuffer
-	
-	LDR R2, =DataBuffer
-	LDR R3, =DataPt
-	STR R2, [R3] ;Point DataPt to DataBuffer
-	
+	PUSH {R0-R4, LR} ; we only use r0-r3, but we push r4 because we also need to push LR and we should push an even number of registers
+; Step 1 part 1
 initFirstBuf
 	LDR R0, =DataBuffer
 	MOV R1, #0 ; ofs = 0
@@ -210,6 +208,7 @@ initLoop
 	CMP R1, #200
 	BLO initLoop
 
+; Step 1 part 2
 initSecondBuf
 	LDR R0, =TimeBuffer
 	MOV R1, #0
@@ -220,10 +219,20 @@ initLoop2
 	CMP R1, #200
 	BLO initLoop2
 	
-	nop
-	; init SysTick
+	; Step 2 part 1
+    LDR R0, =TimeBuffer
+    LDR R1, =TimePt
+    STR R0, [R1] ;Point TimePt to TimeBuffer
+	
+	; Step 2 part 2
+	LDR R2, =DataBuffer
+	LDR R3, =DataPt
+	STR R2, [R3] ;Point DataPt to DataBuffer
+	
+	; Activate the SysTick timer
 	BL SysTick_Init
 
+	POP {R0-R4, PC} ; pop all of our stuff back in from before
     BX LR
 
 ;------------Debug_Capture------------
