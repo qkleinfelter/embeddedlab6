@@ -255,16 +255,20 @@ Debug_Capture
 	; Step 2
 	LDR R0, =DataPt ; Load the address of the data pointer into R0
 	LDR R1, =DataBuffer ; Load the address of the beginning of the data buffer into R1
-	MOV R2, =SIZE ; Move the Size value into R2
-	MUL R2, #4 ; Multiply R2 by 4 to get the total offset for where the last pointer is
+	LDR R3, =SIZE ; Move the Size value into R2
+	LDR R2, [R3]
+	MOV R3, #4 ; set r3 to 4 for multiplying
+	MUL R2, R3 ; Multiply R2 by 4 to get the total offset for where the last pointer is
 	ADD R1, R2 ; Add the data buffer beginning address with the total offset
 	CMP R0, R1 ; Compare the address of the data pointer with the address at the end of the buffer
 	BGT done ; If R0 is greater than R1 than we want to return immediately
 	
 	LDR R0, =TimePt ; Load the address of the time pointer into R0
 	LDR R1, =TimeBuffer ; Load the address of the beginning of the time buffer into R1
-	MOV R2, =SIZE ; Move the Size value into R2
-	MUL R2, #4 ; Multiply R2 by 4 to get the total offset for where the last pointer is
+	LDR R3, =SIZE ; Move the Size value into R2
+	LDR R2, [R3]
+	MOV R3, #4 ; set r3 to 4 for multiplying
+	MUL R2, R3 ; Multiply R2 by 4 to get the total offset for where the last pointer is
 	ADD R1, R2 ; Add the time buffer beginning address with the total offset
 	CMP R0, R1 ; Compare the address of the time pointer with the address at the end of the buffer
 	BGT done ; If R0 is greater than R1 than we want to return immediately
@@ -277,7 +281,15 @@ Debug_Capture
 	LDR R2, [R3] ; Load the value at R3 (the systick data) into R2
 	
 	; Step 4
-
+	LSL R4, R0, #3 ; In R4 put R0 shifted left by 3 bits (we need bit 1 to move to bit 4)
+	MOV R5, #0xF000
+	MOVT R5, #0x0000
+	BIC R4, R5 ; clear everything but bit 4 in R4
+	MOV R5, #0x000F
+	MOVT R5, #0x0000
+	BIC R0, R5 ; clear everything but bit 0 in R5
+	AND R0, R4 ; AND R0 and R4 together to get the values in the correct places
+	
 	; Step 10
 done	POP {R0-R12, PC} ; Pop everything back
     BX LR
