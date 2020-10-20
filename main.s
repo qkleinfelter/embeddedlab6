@@ -115,27 +115,6 @@ InitPortE
 	
 InitPortF
 	
-; copied from SysTick_4C123asm
-SysTick_Init
-    ; disable SysTick during setup
-    LDR R1, =NVIC_ST_CTRL_R         ; R1 = &NVIC_ST_CTRL_R
-    MOV R0, #0                      ; R0 = 0
-    STR R0, [R1]                    ; [R1] = R0 = 0
-    ; maximum reload value
-    LDR R1, =NVIC_ST_RELOAD_R       ; R1 = &NVIC_ST_RELOAD_R
-    LDR R0, =NVIC_ST_RELOAD_M;      ; R0 = NVIC_ST_RELOAD_M
-    STR R0, [R1]                    ; [R1] = R0 = NVIC_ST_RELOAD_M
-    ; any write to current clears it
-    LDR R1, =NVIC_ST_CURRENT_R      ; R1 = &NVIC_ST_CURRENT_R
-    MOV R0, #0                      ; R0 = 0
-    STR R0, [R1]                    ; [R1] = R0 = 0
-    ; enable SysTick with core clock
-    LDR R1, =NVIC_ST_CTRL_R         ; R1 = &NVIC_ST_CTRL_R
-                                    ; R0 = ENABLE and CLK_SRC bits set
-    MOV R0, #(NVIC_ST_CTRL_ENABLE+NVIC_ST_CTRL_CLK_SRC)
-    STR R0, [R1]                    ; [R1] = R0 = (NVIC_ST_CTRL_ENABLE|NVIC_ST_CTRL_CLK_SRC)
-    BX  LR                          ; return
-	
 main
 	; Nothing needs to be initialized here
 	; because it will run through all of InitPortE first
@@ -211,16 +190,39 @@ debugloop  BL   Debug_Capture
 ; Note: push/pop an even number of registers so C compiler is happy
 Debug_Init
       
-; init SysTick
+	; init SysTick
+	BL SysTick_Init
 
-      BX LR
+    BX LR
 
 ;------------Debug_Capture------------
 ; Dump Port E and time into buffers
 ; Note: push/pop an even number of registers so C compiler is happy
 Debug_Capture
 
-      BX LR
+    BX LR
+	  
+
+; copied from SysTick_4C123asm
+SysTick_Init
+    ; disable SysTick during setup
+    LDR R1, =NVIC_ST_CTRL_R         ; R1 = &NVIC_ST_CTRL_R
+    MOV R0, #0                      ; R0 = 0
+    STR R0, [R1]                    ; [R1] = R0 = 0
+    ; maximum reload value
+    LDR R1, =NVIC_ST_RELOAD_R       ; R1 = &NVIC_ST_RELOAD_R
+    LDR R0, =NVIC_ST_RELOAD_M;      ; R0 = NVIC_ST_RELOAD_M
+    STR R0, [R1]                    ; [R1] = R0 = NVIC_ST_RELOAD_M
+    ; any write to current clears it
+    LDR R1, =NVIC_ST_CURRENT_R      ; R1 = &NVIC_ST_CURRENT_R
+    MOV R0, #0                      ; R0 = 0
+    STR R0, [R1]                    ; [R1] = R0 = 0
+    ; enable SysTick with core clock
+    LDR R1, =NVIC_ST_CTRL_R         ; R1 = &NVIC_ST_CTRL_R
+                                    ; R0 = ENABLE and CLK_SRC bits set
+    MOV R0, #(NVIC_ST_CTRL_ENABLE+NVIC_ST_CTRL_CLK_SRC)
+    STR R0, [R1]                    ; [R1] = R0 = (NVIC_ST_CTRL_ENABLE|NVIC_ST_CTRL_CLK_SRC)
+    BX  LR                          ; return
 
 
     ALIGN      ; make sure the end of this section is aligned
