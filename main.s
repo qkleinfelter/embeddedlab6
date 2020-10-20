@@ -58,6 +58,7 @@ DataBuffer SPACE  SIZE*4
 TimeBuffer SPACE  SIZE*4
 DataPt     SPACE  4
 TimePt     SPACE  4
+Count	   SPACE  4
 ;These names MUST be exported
            EXPORT DataBuffer  
            EXPORT TimeBuffer  
@@ -114,6 +115,8 @@ InitPortE
 	STR R0, [R1]
 	
 InitPortF
+
+	B Debug_Init
 	
 main
 	; Nothing needs to be initialized here
@@ -189,7 +192,14 @@ debugloop  BL   Debug_Capture
 ; Initializes the debugging instrument
 ; Note: push/pop an even number of registers so C compiler is happy
 Debug_Init
-      
+    
+initFirstBuf
+	LDR R0, =DataBuffer
+	MOV R1, #0xFFFF
+	MOVT R1, #0xFFFF
+	STRB R1, [R0], #1
+	B initFirstBuf
+	
 	; init SysTick
 	BL SysTick_Init
 
@@ -203,26 +213,21 @@ Debug_Capture
     BX LR
 	  
 
-; copied from SysTick_4C123asm
+; copied from the book
 SysTick_Init
-    ; disable SysTick during setup
-    LDR R1, =NVIC_ST_CTRL_R         ; R1 = &NVIC_ST_CTRL_R
-    MOV R0, #0                      ; R0 = 0
-    STR R0, [R1]                    ; [R1] = R0 = 0
-    ; maximum reload value
-    LDR R1, =NVIC_ST_RELOAD_R       ; R1 = &NVIC_ST_RELOAD_R
-    LDR R0, =NVIC_ST_RELOAD_M;      ; R0 = NVIC_ST_RELOAD_M
-    STR R0, [R1]                    ; [R1] = R0 = NVIC_ST_RELOAD_M
-    ; any write to current clears it
-    LDR R1, =NVIC_ST_CURRENT_R      ; R1 = &NVIC_ST_CURRENT_R
-    MOV R0, #0                      ; R0 = 0
-    STR R0, [R1]                    ; [R1] = R0 = 0
-    ; enable SysTick with core clock
-    LDR R1, =NVIC_ST_CTRL_R         ; R1 = &NVIC_ST_CTRL_R
-                                    ; R0 = ENABLE and CLK_SRC bits set
-    MOV R0, #(NVIC_ST_CTRL_ENABLE+NVIC_ST_CTRL_CLK_SRC)
-    STR R0, [R1]                    ; [R1] = R0 = (NVIC_ST_CTRL_ENABLE|NVIC_ST_CTRL_CLK_SRC)
-    BX  LR                          ; return
+    LDR R1, =NVIC_ST_CTRL_R
+    MOV R0, #0 ; disable SysTick during setup
+    STR R0, [R1]
+    LDR R1, =NVIC_ST_RELOAD_R ; R1 = &NVIC_ST_RELOAD_R
+    LDR R0, =0x00FFFFFF; ; maximum reload value
+    STR R0, [R1] ; [R1] = R0 = NVIC_ST_RELOAD_M
+    LDR R1, =NVIC_ST_CURRENT_R ; R1 = &NVIC_ST_CURRENT_R
+    MOV R0, #0 ; any write to current clears it
+    STR R0, [R1] ; clear counter
+    LDR R1, =NVIC_ST_CTRL_R ; enable SysTick with core clock
+    MOV R0, #0x05
+    STR R0, [R1] ; ENABLE and CLK_SRC bits set
+    BX LR
 
 
     ALIGN      ; make sure the end of this section is aligned
