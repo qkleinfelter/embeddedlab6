@@ -282,10 +282,10 @@ Debug_Capture
 	
 	; Step 5 - shift data bit 1 into bit 4 in port e
 	LSL R4, R0, #3 ; In R4 put R0 shifted left by 3 bits (we need bit 1 to move to bit 4)
-	MOV R5, #0x0FFF
+	MOV R5, #0xFFEF
 	MOVT R5, #0xFFFF
 	BIC R4, R5 ; clear everything but bit 4 in R4
-	MOV R5, #0xFFF0
+	MOV R5, #0xFFFE
 	MOVT R5, #0xFFFF
 	BIC R0, R5 ; clear everything but bit 0 in R5
 	ORR R0, R4 ; OR R0 and R4 together to get the values in the correct places
