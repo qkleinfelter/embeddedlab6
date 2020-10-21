@@ -77,7 +77,7 @@ Start BL   TExaS_Init  ; running at 80 MHz, scope voltmeter on PD3
 
 InitPortE
 	; SYSCTL_RCGCGPIO_R = 0x10
-	MOV R0, #0x10
+	MOV R0, #0x30
 	LDR R1, =SYSCTL_RCGCGPIO_R
 	STR R0, [R1]
 	
@@ -114,13 +114,67 @@ InitPortE
 	STR R0, [R1]
 	
 InitPortF
+	; SYSCTL_RCGCGPIO_R = 0x20
+	;MOV R0, #0x20
+	;LDR R1, =SYSCTL_RCGCGPIO_R
+	;STR R0, [R1]
+	
+	LDR R0, [R1] ; Delay before we continue on
+	
+	; Before we write to the CR Register
+	; we need to unlock the port F, using the
+	; constant #0x4C4F434B, however we can't
+	; write this constant directly to using MOV
+	; so we use MOV and MOVT to add it into the register
+	; in 2 parts, note: we must use the MOV command before
+	; MOVT, otherwise the MOV command will overwrite the top
+	; half of the register not unlocking the port
+	; GPIO_PORT_F_LOCK_R = 0x4C4F434B
+	MOV R0, #0x434B
+	MOVT R0, #0x4C4F
+	LDR R1, =GPIO_PORTF_LOCK_R
+	STR R0, [R1]
 
+	; GPIO_PORTF_CR_R = 0x04
+	MOV R0, #0x04
+	LDR R1, =GPIO_PORTF_CR_R
+	STR R0, [R1]
+
+	; GPIO_PORTF_AMSEL_R = 0x00
+	MOV R0, #0x00
+	LDR R1, =GPIO_PORTF_AMSEL_R
+	STR R0, [R1]
+	
+	; GPIO_PORTF_PCTL_R = 0x00
+	MOV R0, #0x00
+	LDR R1, =GPIO_PORTF_PCTL_R
+	STR R0, [R1]
+	
+	; GPIO_PORTF_DIR_R = 0x04
+	MOV R0, #0x04
+	LDR R1, =GPIO_PORTF_DIR_R
+	STR R0, [R1]
+	
+	; GPIO_PORTF_AFSEL_R = 0x00
+	MOV R0, #0x00
+	LDR R1, =GPIO_PORTF_AFSEL_R
+	STR R0, [R1]
+	
+	; GPIO_PORTF_PUR_R = 0x00
+	MOV R0, #0x00
+	LDR R1, =GPIO_PORTF_PUR_R
+	STR R0, [R1]
+	
+	; GPIO_PORTF_DEN_R = 0x04
+	MOV R0, #0x04
+	LDR R1, =GPIO_PORTF_DEN_R
+	STR R0, [R1]
 	BL Debug_Init
 	
 
       CPSIE  I    ; TExaS voltmeter, scope runs on interrupts
 loop  BL   Debug_Capture
-    ;heartbeat
+    BL heartbeat
     ; Delay
     ;input PE1 test output PE0
 	BL delay62MS ; We want to delay at the beginning now
@@ -155,8 +209,6 @@ toggleLED ; Toggles the LED
 	; This will move 0x00 into the Port E data register
 	; which will turn off the LED
 	STR R0, [R1]
-	; Then we need to delay by 62ms
-	BL delay62MS
 	; And begin our loop again
 	B loop
 	
@@ -164,8 +216,6 @@ turnOnLED ; Turns the LED on, no matter what state it is in currently
 	MOV R0, #0x01
 	LDR R1, =GPIO_PORTE_DATA_R
 	STR R0, [R1]
-	; Again, we need to delay 62ms
-	BL delay62MS
 	; and begin our loop again
 	B loop
 
@@ -312,7 +362,31 @@ Debug_Capture
 done	POP {R0-R12, PC} ; Pop everything back
     BX LR
 	  
+heartbeat
+	PUSH {R0-R12, LR}
+	; Read our current Port F data because
+	; we need to check if the LED is on or not
+	LDR R1, =GPIO_PORTF_DATA_R ; Load the address of the Port F data into R1 so we can use it
+	LDR R0, [R1] ; Load the value at R1 (the port data) into R0
+	; Pin 1 is always on when we call toggleLED
+	CMP R0, #0x00 ; Check if the value in R0 is 0, which indicates pin 2 is on, hence the LED is off
+	BEQ turnOnLEDPortF ; if this value is 10, then that means our LED is currently off and we need to turn it on
+	; Otherwise, just turn off the LED
+	MOV R0, #0x00
+	LDR R1, =GPIO_PORTF_DATA_R
+	; This will move 0x00 into the Port E data register
+	; which will turn off the LED
+	STR R0, [R1]
+	POP {R0-R12, PC}
+	BX LR
 
+turnOnLEDPortF ; Turns the LED on, no matter what state it is in currently
+	MOV R0, #0x04
+	LDR R1, =GPIO_PORTF_DATA_R
+	STR R0, [R1]
+	POP {R0-R12, PC}
+	BX LR
+	
 ; copied from the book
 SysTick_Init
     LDR R1, =NVIC_ST_CTRL_R
