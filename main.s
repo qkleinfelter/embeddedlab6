@@ -223,9 +223,9 @@ delay62MS ; Subroutine that will delay our code by roughly 62ms
 	; To delay the running by about 62ms we need to put
 	; a large number into a register and slowly reduce it
 	; so that we take up 62ms worth of cycles
-	; the large number we've chosen is #0xB5000
-	MOV R7, #0x5000
-	MOVT R7, #0xB
+	; the large number we've chosen is #0x12D000
+	MOV R7, #0xD000
+	MOVT R7, #0x12
 delay
 	SUBS R7, R7, #0x01 ; Subtract the current value of R12 by 1 and put it into R12
 	BNE delay ; Compare R12 to 0 and if it is not 0, go back to delay
