@@ -314,7 +314,7 @@ Debug_Capture
 	MUL R2, R3 ; Multiply R2 by 4 to get the total offset for where the last pointer is
 	ADD R1, R2 ; Add the data buffer beginning address with the total offset
 	CMP R0, R1 ; Compare the address of the data pointer with the address at the end of the buffer
-	BGT done ; If R0 is greater than R1 than we want to return immediately
+	BHS done ; If R0 is greater than R1 than we want to return immediately
 	
 	LDR R1, =TimePt ; Load the address of the time pointer into R0
 	LDR R0, [R1]
@@ -324,7 +324,7 @@ Debug_Capture
 	MUL R2, R3 ; Multiply R2 by 4 to get the total offset for where the last pointer is
 	ADD R1, R2 ; Add the time buffer beginning address with the total offset
 	CMP R0, R1 ; Compare the address of the time pointer with the address at the end of the buffer
-	BGT done ; If R0 is greater than R1 than we want to return immediately
+	BHS done ; If R0 is greater than R1 than we want to return immediately
 	
 	; Step 3 - read port e and systick (into r0 and r2 respectively)
 	LDR R1, =GPIO_PORTE_DATA_R ; Load the address of the Port E data into R1 so we can use it
