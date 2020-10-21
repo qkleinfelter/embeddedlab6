@@ -223,9 +223,9 @@ delay62MS ; Subroutine that will delay our code by roughly 62ms
 	; To delay the running by about 62ms we need to put
 	; a large number into a register and slowly reduce it
 	; so that we take up 62ms worth of cycles
-	; the large number we've chosen is #0x12D000
+	; the large number we've chosen is #0xCD000
 	MOV R7, #0xD000
-	MOVT R7, #0x12
+	MOVT R7, #0xC
 delay
 	SUBS R7, R7, #0x01 ; Subtract the current value of R12 by 1 and put it into R12
 	BNE delay ; Compare R12 to 0 and if it is not 0, go back to delay
@@ -295,6 +295,12 @@ initLoop2
 ; 8. Dump time into TimeBuffer using the pointer TimePt
 ; 9. Increment TimePt to next address
 ; 10. Restore any registers saved and return
+; ESTIMATE INTRUSIVENESS:
+; Debug Capture contains 43 instructions
+; 43 * 2 * 12.5ns = 1075ns
+; Total delay 62ms + 0.001075ms = 62.001075ms
+; 0.001075ms / 62.001075ms = 1.733 * 10^-5 * 100 = 0.001733% intrusiveness
+; Therefore the intrusiveness is negligible
 Debug_Capture
 	; Step 1 - Save registers
 	PUSH {R0-R12, LR} ; push em all for now, we can reduce this later if needed
