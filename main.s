@@ -278,8 +278,7 @@ Debug_Capture
 	LDR R2, [R3] ; Load the value at R3 (the systick data) into R2
 	
 	; Step 4 - mask to only get bits 1,0 from port e
-	MOV R4, #0x0011
-	MOVT R4, #0x0000
+	MOV R4, #0x03
 	AND R0, R4 ; We want R0 to only worry about bits 1,0
 	
 	; Step 5 - shift data bit 1 into bit 4 in port e
